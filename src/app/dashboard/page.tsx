@@ -2,6 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { auth } from "@/lib/firebase";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged, User } from "firebase/auth";
 import {
   Flame,
   BookOpen,
@@ -21,7 +23,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
-  const user = auth.currentUser;
+  const [user, setUser] = useState<User | null>(null);
+
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (u) => {
+    setUser(u);
+  });
+
+  return unsubscribe;
+}, []);
+
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
