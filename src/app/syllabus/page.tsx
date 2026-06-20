@@ -24,6 +24,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 
+// Increase timeout for large PDF processing
+export const maxDuration = 120;
+
 export default function SyllabusPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<SyllabusIntelligenceEngineOutput | null>(null);
@@ -63,7 +66,7 @@ export default function SyllabusPage() {
       toast({
         variant: "destructive",
         title: "Scan Failed",
-        description: error.message || "Could not process the syllabus file.",
+        description: error.message || "Could not process the syllabus file. The file might be too large or the processing timed out.",
       });
     } finally {
       setIsScanning(false);
@@ -78,7 +81,7 @@ export default function SyllabusPage() {
         </div>
         <h1 className="text-4xl font-headline font-bold">Syllabus Intelligence Engine</h1>
         <p className="text-muted-foreground text-lg max-w-2xl">
-          Upload your course syllabus. Lumina will extract units, detect topics, and build your entire semester timeline in seconds.
+          Upload your course syllabus. Lumina will extract units, detect topics, and build your entire semester timeline in seconds. No file size limits applied.
         </p>
       </header>
 
@@ -92,19 +95,19 @@ export default function SyllabusPage() {
               <h3 className="text-xl font-bold">Upload Syllabus</h3>
               <p className="text-muted-foreground">Supported formats: PDF, DOCX, JPEG, PNG</p>
             </div>
-            <div className="w-full max-w-sm">
+            <div className="w-full max-sm px-4">
               <Label htmlFor="syllabus-upload" className="sr-only">Choose file</Label>
               <div className="flex flex-col gap-2">
                 <Input 
                   id="syllabus-upload" 
                   type="file" 
-                  className="cursor-pointer" 
+                  className="cursor-pointer bg-secondary/30 border-white/5" 
                   onChange={handleFileChange}
                   accept=".pdf,.docx,.jpg,.jpeg,.png"
                 />
                 {file && (
                   <p className="text-xs text-primary font-medium flex items-center gap-1">
-                    <FileText className="w-3 h-3" /> Selected: {file.name}
+                    <FileText className="w-3 h-3" /> Selected: {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
                   </p>
                 )}
               </div>
