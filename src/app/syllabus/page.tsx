@@ -5,7 +5,11 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 import { Label } from "@/components/ui/label";
+import { storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { 
   FileUp, 
   Sparkles, 
@@ -44,6 +48,9 @@ export default function SyllabusPage() {
     setIsScanning(true);
     
     try {
+      //const storageRef = ref(storage, `syllabi/${Date.now()}-${file.name}`);
+      //await uploadBytes(storageRef, file);
+      //const fileUrl = await getDownloadURL(storageRef);
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(reader.result as string);
@@ -52,9 +59,15 @@ export default function SyllabusPage() {
       });
 
       const data = await syllabusIntelligenceEngine({
-        syllabusDataUri: base64,
-        syllabusDescription: `Syllabus for ${file.name}`
-      });
+  syllabusDataUri: base64,
+  syllabusDescription: `Syllabus for ${file.name}`
+});
+
+ await setDoc(doc(db, "syllabi", `${Date.now()}`), {
+  fileName: file.name,
+  fileUrl: "",
+  uploadedAt: new Date().toISOString(),
+});
       
       setResult(data);
       toast({
