@@ -1,0 +1,23 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-student",
+      "description": "A student focused on studying with futuristic digital overlays.",
+      "imageUrl": "https://picsum.photos/seed/studypilot1/1200/600",
+      "imageHint": "student studying"
+    },
+    {
+      "id": "syllabus-bg",
+      "description": "Abstract library background with a modern tech feel.",
+      "imageUrl": "https://picsum.photos/seed/studypilot2/800/400",
+      "imageHint": "modern library"
+    },
+    {
+      "id": "tutor-avatar",
+      "description": "Friendly AI tutor representation.",
+      "imageUrl": "https://picsum.photos/seed/studypilot3/200/200",
+      "imageHint": "robot tutor"
+    }
+  ]
+}
