@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { auth } from "@/lib/firebase";
 import { 
   Flame, 
   BookOpen, 
@@ -24,7 +25,7 @@ export default function Dashboard() {
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-headline font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Welcome back, Alex!
+            THIS IS A TEST
           </h1>
           <p className="text-muted-foreground mt-1">You have 3 study goals for today. Let's crush them.</p>
         </div>
