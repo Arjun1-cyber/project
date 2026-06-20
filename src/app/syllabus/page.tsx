@@ -16,16 +16,19 @@ import {
   ChevronRight,
   ListTodo,
   AlertCircle,
-  Loader2
+  Loader2,
+  FileText
 } from "lucide-react";
 import { syllabusIntelligenceEngine, SyllabusIntelligenceEngineOutput } from "@/ai/flows/syllabus-intelligence-engine-flow";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { useToast } from "@/hooks/use-toast";
 
 export default function SyllabusPage() {
   const [isScanning, setIsScanning] = useState(false);
   const [result, setResult] = useState<SyllabusIntelligenceEngineOutput | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const { toast } = useToast();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) {
@@ -36,21 +39,33 @@ export default function SyllabusPage() {
   const startScan = async () => {
     if (!file) return;
     setIsScanning(true);
+    
     try {
-      // Simulate reading file as base64 for the AI flow
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = async () => {
-        const base64 = reader.result as string;
-        const data = await syllabusIntelligenceEngine({
-          syllabusDataUri: base64,
-          syllabusDescription: "Course syllabus for upcoming semester"
-        });
-        setResult(data);
-        setIsScanning(false);
-      };
-    } catch (error) {
-      console.error(error);
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error("Failed to read file"));
+        reader.readAsDataURL(file);
+      });
+
+      const data = await syllabusIntelligenceEngine({
+        syllabusDataUri: base64,
+        syllabusDescription: `Syllabus for ${file.name}`
+      });
+      
+      setResult(data);
+      toast({
+        title: "Syllabus Analyzed",
+        description: "Your semester timeline has been generated.",
+      });
+    } catch (error: any) {
+      console.error("Scan error:", error);
+      toast({
+        variant: "destructive",
+        title: "Scan Failed",
+        description: error.message || "Could not process the syllabus file.",
+      });
+    } finally {
       setIsScanning(false);
     }
   };
@@ -79,13 +94,20 @@ export default function SyllabusPage() {
             </div>
             <div className="w-full max-w-sm">
               <Label htmlFor="syllabus-upload" className="sr-only">Choose file</Label>
-              <Input 
-                id="syllabus-upload" 
-                type="file" 
-                className="cursor-pointer" 
-                onChange={handleFileChange}
-                accept=".pdf,.docx,.jpg,.jpeg,.png"
-              />
+              <div className="flex flex-col gap-2">
+                <Input 
+                  id="syllabus-upload" 
+                  type="file" 
+                  className="cursor-pointer" 
+                  onChange={handleFileChange}
+                  accept=".pdf,.docx,.jpg,.jpeg,.png"
+                />
+                {file && (
+                  <p className="text-xs text-primary font-medium flex items-center gap-1">
+                    <FileText className="w-3 h-3" /> Selected: {file.name}
+                  </p>
+                )}
+              </div>
             </div>
             <Button 
               size="lg" 
@@ -184,7 +206,10 @@ export default function SyllabusPage() {
                 <Button className="w-full gap-2 font-bold" size="lg">
                   Sync to Planner <ChevronRight className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => setResult(null)}>
+                <Button variant="outline" className="w-full" onClick={() => {
+                  setResult(null);
+                  setFile(null);
+                }}>
                   Scan New Syllabus
                 </Button>
               </CardContent>
@@ -201,6 +226,9 @@ export default function SyllabusPage() {
                     <p className="text-xs text-muted-foreground mt-1">Due: {asn.dueDate}</p>
                   </div>
                 ))}
+                {result.assignments.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic">No assignments detected.</p>
+                )}
               </CardContent>
             </Card>
           </div>

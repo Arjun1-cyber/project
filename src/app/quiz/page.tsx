@@ -17,11 +17,15 @@ import {
   ChevronRight,
   Loader2,
   CheckCircle2,
-  XCircle
+  XCircle,
+  FileText
 } from "lucide-react";
 import { adaptiveQuizForge, AdaptiveQuizForgeOutput } from "@/ai/flows/adaptive-quiz-forge-flow";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
 
 export default function QuizForgePage() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -30,18 +34,37 @@ export default function QuizForgePage() {
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [studyMaterial, setStudyMaterial] = useState("");
+  const { toast } = useToast();
 
   const generateQuiz = async () => {
+    if (!studyMaterial.trim()) {
+      toast({
+        variant: "destructive",
+        title: "No material provided",
+        description: "Please paste the material you want to be quizzed on.",
+      });
+      return;
+    }
+
     setIsGenerating(true);
     try {
       const data = await adaptiveQuizForge({
-        studyMaterial: "Data Structures and Algorithms: Arrays, Linked Lists, Sorting techniques including QuickSort and MergeSort.",
+        studyMaterial: studyMaterial,
         numQuestions: 5,
         questionTypes: ["MCQ", "True/False", "Coding"]
       });
       setQuizData(data);
+      setCurrentQuestionIdx(0);
+      setScore(0);
+      setIsCompleted(false);
     } catch (error) {
       console.error(error);
+      toast({
+        variant: "destructive",
+        title: "Forge Failed",
+        description: "Could not generate questions from your material.",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -50,11 +73,19 @@ export default function QuizForgePage() {
   const handleNext = () => {
     if (!quizData) return;
     
-    // Check answer (simplified)
     const currentQ = quizData.quizQuestions[currentQuestionIdx];
+    
+    let isCorrect = false;
     if (currentQ.type === 'MCQ' && selectedAnswer === currentQ.correctAnswer) {
-      setScore(s => s + 1);
+      isCorrect = true;
+    } else if (currentQ.type === 'True/False') {
+      const boolAns = selectedAnswer === "true";
+      if (boolAns === currentQ.answer) isCorrect = true;
+    } else if (currentQ.type === 'Coding') {
+      isCorrect = true; // Placeholder for coding validation
     }
+
+    if (isCorrect) setScore(s => s + 1);
 
     if (currentQuestionIdx < quizData.quizQuestions.length - 1) {
       setCurrentQuestionIdx(idx => idx + 1);
@@ -84,8 +115,8 @@ export default function QuizForgePage() {
             <p className="text-3xl font-bold text-accent">+250 XP</p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Time Taken</p>
-            <p className="text-3xl font-bold text-foreground">3:42</p>
+            <p className="text-xs text-muted-foreground uppercase font-bold tracking-widest">Questions</p>
+            <p className="text-3xl font-bold text-foreground">{quizData?.quizQuestions.length}</p>
           </div>
         </Card>
         <div className="flex gap-4 justify-center">
@@ -114,34 +145,58 @@ export default function QuizForgePage() {
       </header>
 
       {!quizData ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Card className="glass-card hover:border-primary/50 transition-all group cursor-pointer" onClick={generateQuiz}>
+        <div className="space-y-8">
+          <Card className="glass-card">
             <CardHeader>
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                <Sparkles className="text-primary w-6 h-6" />
-              </div>
-              <CardTitle>Forge from Notes</CardTitle>
-              <CardDescription>AI analyzes your recent uploads to create targeted questions</CardDescription>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" /> Study Material
+              </CardTitle>
+              <CardDescription>Paste the content you want to generate questions from.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <Button className="w-full gap-2 font-bold" disabled={isGenerating}>
-                {isGenerating ? <Loader2 className="w-4 h-4 animate-spin" /> : <><Zap className="w-4 h-4" /> Start Forging</>}
+            <CardContent className="space-y-6">
+              <Textarea 
+                placeholder="Paste lecture notes, book chapters, or paper abstracts here..." 
+                className="min-h-[300px] bg-secondary/30 border-white/5 resize-none"
+                value={studyMaterial}
+                onChange={(e) => setStudyMaterial(e.target.value)}
+              />
+              <Button 
+                size="lg" 
+                className="w-full gap-2 font-bold h-14" 
+                disabled={isGenerating || !studyMaterial.trim()}
+                onClick={generateQuiz}
+              >
+                {isGenerating ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" /> Start Forging Practice Test
+                  </>
+                )}
               </Button>
             </CardContent>
           </Card>
 
-          <Card className="glass-card opacity-60">
-            <CardHeader>
-              <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center mb-4">
-                <Target className="text-accent w-6 h-6" />
-              </div>
-              <CardTitle>Timed Mock Test</CardTitle>
-              <CardDescription>Full length exam simulations with detailed results (Premium Only)</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="secondary" className="w-full gap-2 font-bold" disabled>Locked Feature</Button>
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 opacity-60">
+            <Card className="glass-card">
+              <CardHeader>
+                <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center mb-2">
+                  <Target className="text-accent w-5 h-5" />
+                </div>
+                <CardTitle className="text-lg">Timed Mock Test</CardTitle>
+                <CardDescription>Full length exam simulations (Premium Only)</CardDescription>
+              </CardHeader>
+            </Card>
+            <Card className="glass-card">
+              <CardHeader>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center mb-2">
+                  <Code className="text-primary w-5 h-5" />
+                </div>
+                <CardTitle className="text-lg">Algorithm Lab</CardTitle>
+                <CardDescription>Specific coding challenge generation (Premium Only)</CardDescription>
+              </CardHeader>
+            </Card>
+          </div>
         </div>
       ) : (
         <div className="space-y-6">
@@ -159,7 +214,6 @@ export default function QuizForgePage() {
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
                   <Badge variant="outline" className="text-primary border-primary/20">{quizData.quizQuestions[currentQuestionIdx].type}</Badge>
-                  {quizData.quizQuestions[currentQuestionIdx].type === 'Coding' && <Badge variant="outline" className="text-accent border-accent/20">Java</Badge>}
                 </div>
                 <h2 className="text-2xl font-bold leading-tight">
                   {quizData.quizQuestions[currentQuestionIdx].question}
@@ -204,13 +258,9 @@ export default function QuizForgePage() {
                     <Badge variant="outline" className="text-xs">Solution Needed</Badge>
                   </div>
                   <pre className="text-emerald-400">
-                    {`public class Solution {
-    public int findMax(int[] arr) {
-        // [BLANK]
-    }
-}`}
+                    {`// Language: ${(quizData.quizQuestions[currentQuestionIdx] as any).language || 'Code'}\n\n// Solve the problem here:`}
                   </pre>
-                  <Input placeholder="Enter your solution code snippet..." className="font-mono bg-black/40 border-white/10 mt-4" />
+                  <Textarea placeholder="Enter your solution code snippet..." className="font-mono bg-black/40 border-white/10 mt-4 min-h-[150px]" />
                 </div>
               )}
 
@@ -218,9 +268,15 @@ export default function QuizForgePage() {
                 <p className="text-xs text-muted-foreground flex items-center gap-2">
                   <Clock className="w-4 h-4" /> Est. Time: 2 mins
                 </p>
-                <Button size="lg" className="gap-2 font-bold px-10" onClick={handleNext} disabled={!selectedAnswer && quizData.quizQuestions[currentQuestionIdx].type !== 'Coding'}>
-                  {currentQuestionIdx === quizData.quizQuestions.length - 1 ? "Finish Quiz" : "Next Question"} <ArrowRight className="w-4 h-4" />
-                </Button>
+                <div className="flex gap-3">
+                   <Button variant="ghost" onClick={() => {
+                     setQuizData(null);
+                     setStudyMaterial("");
+                   }}>Reset</Button>
+                   <Button size="lg" className="gap-2 font-bold px-10" onClick={handleNext} disabled={!selectedAnswer && quizData.quizQuestions[currentQuestionIdx].type !== 'Coding'}>
+                    {currentQuestionIdx === quizData.quizQuestions.length - 1 ? "Finish Quiz" : "Next Question"} <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -18,13 +18,15 @@ import {
   ChevronDown,
   Play,
   Settings2,
-  MoreVertical
+  MoreVertical,
+  FileText
 } from "lucide-react";
 import { multilingualAITutor, MultilingualAITutorOutput } from "@/ai/flows/multilingual-ai-tutor-flow";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 type Message = {
   id: string;
@@ -39,7 +41,7 @@ export default function AITutorPage() {
     {
       id: "1",
       role: "assistant",
-      text: "Hello! I'm Lumina, your AI Academic Tutor. You can upload study materials or ask me any questions. I can explain things in English, Hindi, or both!",
+      text: "Hello! I'm Lumina, your AI Academic Tutor. You can provide study materials in the 'Study Context' section on the right, and then ask me any questions. I can explain things in English, Hindi, or both!",
       timestamp: new Date()
     }
   ]);
@@ -47,6 +49,7 @@ export default function AITutorPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [language, setLanguage] = useState<"en" | "hi" | "mixed">("mixed");
   const [voiceEnabled, setVoiceEnabled] = useState(false);
+  const [context, setContext] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -72,7 +75,7 @@ export default function AITutorPage() {
     try {
       const response = await multilingualAITutor({
         userInput: input,
-        documentContext: "General study help", // In a real app, this would be the actual doc content
+        documentContext: context || "No specific context provided. Help the student with general knowledge if the question is academic.",
         language,
         voiceOutputEnabled: voiceEnabled
       });
@@ -214,25 +217,22 @@ export default function AITutorPage() {
           </div>
         </Card>
 
-        <div className="hidden lg:flex flex-col w-80 gap-6">
+        <div className="hidden lg:flex flex-col w-96 gap-6">
           <Card className="glass-card">
             <CardHeader>
               <CardTitle className="text-lg">Study Context</CardTitle>
               <CardDescription>Relevant materials for this session</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-3 rounded-xl bg-primary/5 border border-primary/20 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-primary" />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold truncate">Physics_Unit_2.pdf</p>
-                  <p className="text-[10px] text-muted-foreground">Uploaded 2h ago</p>
-                </div>
-              </div>
-              <Button variant="outline" className="w-full text-xs gap-2" size="sm">
-                Add More Materials
-              </Button>
+              <Textarea 
+                placeholder="Paste context from notes or textbooks here to help Lumina answer better..." 
+                className="min-h-[200px] text-xs bg-secondary/30 border-white/5 resize-none"
+                value={context}
+                onChange={(e) => setContext(e.target.value)}
+              />
+              <p className="text-[10px] text-muted-foreground">
+                Providing specific context helps the AI tutor stay grounded in your exact course material.
+              </p>
             </CardContent>
           </Card>
 
@@ -254,7 +254,3 @@ export default function AITutorPage() {
     </div>
   );
 }
-
-const FileText = ({ className }: { className?: string }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>
-);
