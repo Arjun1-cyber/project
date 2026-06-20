@@ -21,14 +21,17 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
+  const user = auth.currentUser;
   return (
     <div className="p-8 space-y-8 animate-in fade-in duration-500">
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-4xl font-headline font-bold tracking-tight bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            THIS IS A TEST
+            Welcome, {user?.displayName ||"Student"} 👋
           </h1>
-          <p className="text-muted-foreground mt-1">You have 3 study goals for today. Let's crush them.</p>
+          <p className="text-muted-foreground mt-1">
+  Ready to study today, {user?.displayName?.split(" ")[0] || "Student"}?
+</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-full flex items-center gap-2">
