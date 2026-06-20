@@ -2,19 +2,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { auth } from "@/lib/firebase";
-import { 
-  Flame, 
-  BookOpen, 
-  CalendarDays, 
-  Clock, 
-  TrendingUp, 
-  Zap, 
+import {
+  Flame,
+  BookOpen,
+  CalendarDays,
+  Clock,
+  TrendingUp,
+  Zap,
   Star,
   CheckCircle2,
   ArrowRight,
   Sparkles,
   MessageSquare,
-  FileText
+  FileText,
+  Upload
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -142,7 +143,7 @@ export default function Dashboard() {
               <Button variant="secondary" className="h-20 flex flex-col gap-2 rounded-xl" asChild>
                 <Link href="/syllabus">
                   <Sparkles className="w-5 h-5" />
-                  <span className="text-xs">Scan Syllabus</span>
+                  <span className="text-xs">Upload PDF</span>
                 </Link>
               </Button>
               <Button variant="secondary" className="h-20 flex flex-col gap-2 rounded-xl" asChild>
@@ -159,7 +160,7 @@ export default function Dashboard() {
               </Button>
               <Button variant="secondary" className="h-20 flex flex-col gap-2 rounded-xl" asChild>
                 <Link href="/vault">
-                  <FileText className="w-5 h-5" />
+                  <Upload className="w-5 h-5" />
                   <span className="text-xs">Notes Gen</span>
                 </Link>
               </Button>
