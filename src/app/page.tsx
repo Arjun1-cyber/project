@@ -1,21 +1,34 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { signInWithPopup } from "firebase/auth";
 import { auth, provider } from "@/lib/firebase";
-import { useRouter } from "next/navigation";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 export default function Home() {
   const router = useRouter();
 
   const handleLogin = async () => {
-    try {
-      await signInWithPopup(auth, provider);
-      router.push("/dashboard");
-    } catch (error) {
-      console.error(error);
-      alert("Login failed");
-    }
-  };
+  try {
+    const result = await signInWithPopup(auth, provider);
+
+    const user = result.user;
+
+    await setDoc(doc(db, "users", user.uid), {
+      uid: user.uid,
+      name: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+      lastLogin: new Date().toISOString(),
+    });
+
+    router.push("/dashboard");
+  } catch (error) {
+    console.error(error);
+    alert("Login failed");
+  }
+};
 
   return (
     <div className="flex min-h-screen items-center justify-center">
